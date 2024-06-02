@@ -4,15 +4,22 @@
   "description": "Projeto de estudo para consumo de API do Youtube + tratamento de vídeo + IA LLM",
   "main": "index.js",
   "scripts": {
-    "dev": "next dev",
+    "dev": "./infra/scripts/init-dev.sh",
+    "services:up": "docker compose -f infra/compose.yaml up -d",
+    "services:stop": "docker compose -f infra/compose.yaml stop",
+    "services:down": "docker compose -f infra/compose.yaml down",
     "lint:check": "prettier --check .",
     "lint:fix": "prettier --write .",
     "test": "jest --runInBand",
-    "test:watch": "jest --watchAll --runInBand"
+    "test:watch": "jest --watchAll --runInBand",
+    "wait-for-postgres": "node ./infra/scripts/wait-for-postgres.js",
+    "migration:create": "npx prisma migrate dev --schema=./infra/schema.prisma --name ",
+    "migration:up": "npx prisma migrate deploy --schema=./infra/schema.prisma"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@prisma/client": "^5.14.0",
     "axios": "^1.7.2",
     "dotenv": "^16.4.4",
     "dotenv-expand": "^11.0.6",
@@ -22,6 +29,10 @@
   },
   "devDependencies": {
     "jest": "^29.6.2",
-    "prettier": "^3.2.5"
+    "prettier": "^3.2.5",
+    "prisma": "^5.14.0"
+  },
+  "prisma": {
+    "schema": "./infra/schema.prisma"
   }
 }
