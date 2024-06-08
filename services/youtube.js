@@ -1,4 +1,7 @@
 import axios from "axios";
+import ytdl from "ytdl-core";
+import fileSystem from "fs";
+import { join } from "node:path";
 
 const API_KEY = process.env.YOUTUBE_API_KEY;
 
@@ -55,7 +58,34 @@ async function getVideoDetail(videoId) {
   }
 }
 
+async function downloadVideo(videoId) {
+  const info = await ytdl.getInfo(videoId);
+  const format = ytdl.chooseFormat(info.formats, { quality: "18" });
+  const today = getTodayDir();
+  const outputDir = join("resources", "videos", today);
+  const outputFilePath = join(outputDir, `${info.videoDetails.title}.mp4`);
+
+  fileSystem.mkdirSync(outputDir, { recursive: true });
+  const outputStream = fileSystem.createWriteStream(outputFilePath);
+  ytdl.downloadFromInfo(info, { format: format }).pipe(outputStream);
+
+  await new Promise((resolve, reject) => {
+    outputStream.on("finish", resolve);
+    outputStream.on("error", reject);
+  });
+}
+
+function getTodayDir() {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, "0");
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const year = today.getFullYear();
+
+  return `${day}-${month}-${year}`;
+}
+
 export default {
   getLatestVideo,
   getVideoDetail,
+  downloadVideo,
 };
