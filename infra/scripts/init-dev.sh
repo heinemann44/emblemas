@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function cleanup {
-    npm run services:stop
+    npm run services:down
     exit 0
 }
 
