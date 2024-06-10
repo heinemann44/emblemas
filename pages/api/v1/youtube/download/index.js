@@ -1,4 +1,5 @@
 import youtube from "services/youtube.js";
+import video from "services/video.js";
 
 async function downloadVideo(request, response) {
   const { channelId } = request.query;
@@ -12,6 +13,7 @@ async function downloadVideo(request, response) {
   try {
     const latestVideo = await youtube.getLatestVideo(channelId);
     await youtube.downloadVideo(latestVideo.videoId);
+    await video.extractFrames(latestVideo.videoId);
 
     response.status(200).json("download complete");
   } catch (error) {
