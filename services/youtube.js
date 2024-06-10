@@ -2,6 +2,7 @@ import axios from "axios";
 import ytdl from "ytdl-core";
 import fileSystem from "fs";
 import { join } from "node:path";
+import utils from "/services/utils.js";
 
 const API_KEY = process.env.YOUTUBE_API_KEY;
 
@@ -59,29 +60,29 @@ async function getVideoDetail(videoId) {
 }
 
 async function downloadVideo(videoId) {
-  const info = await ytdl.getInfo(videoId);
-  const format = ytdl.chooseFormat(info.formats, { quality: "18" });
-  const today = getTodayDir();
-  const outputDir = join("resources", "videos", today);
-  const outputFilePath = join(outputDir, `${info.videoDetails.title}.mp4`);
+  try {
+    const info = await ytdl.getInfo(videoId);
+    const format = ytdl.chooseFormat(info.formats, { quality: "18" });
+    const today = utils.getTodayDir();
+    const outputDir = join("resources", "videos", today);
+    const outputFilePath = join(outputDir, `${info.videoDetails.videoId}.mp4`);
 
-  fileSystem.mkdirSync(outputDir, { recursive: true });
-  const outputStream = fileSystem.createWriteStream(outputFilePath);
-  ytdl.downloadFromInfo(info, { format: format }).pipe(outputStream);
+    fileSystem.mkdirSync(outputDir, { recursive: true });
+    const outputStream = fileSystem.createWriteStream(outputFilePath);
+    ytdl.downloadFromInfo(info, { format: format }).pipe(outputStream);
 
-  await new Promise((resolve, reject) => {
-    outputStream.on("finish", resolve);
-    outputStream.on("error", reject);
-  });
-}
-
-function getTodayDir() {
-  const today = new Date();
-  const day = String(today.getDate()).padStart(2, "0");
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const year = today.getFullYear();
-
-  return `${day}-${month}-${year}`;
+    await new Promise((resolve, reject) => {
+      outputStream.on("finish", resolve);
+      outputStream.on("error", reject);
+    });
+  } catch (error) {
+    if (error.message.includes("No such format found")) {
+      console.log("VIDEO PRIVADO");
+    } else {
+      console.error("Error fetching video detail:", error);
+      throw error;
+    }
+  }
 }
 
 export default {
