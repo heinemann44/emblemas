@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import fileSystem from "fs";
 import utils from "/services/utils.js";
+import { createWorker } from "tesseract.js";
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
 const sharp = require("sharp");
@@ -22,6 +23,8 @@ async function extractFrames(videoId) {
   await generateFrames(inputVideoPath, outputFramesPath);
 
   await processFrames(outputDir);
+
+  await extractTextFromFrames(outputDir);
 }
 
 async function generateFrames(inputVideoPath, outputFramesPath) {
@@ -30,15 +33,14 @@ async function generateFrames(inputVideoPath, outputFramesPath) {
       .on("start", function (commandLine) {
         console.log("Iniciado ffmpeg com comando: " + commandLine);
       })
-      .on("progress", function (progress) {
-        console.log("Progresso: " + progress.frames + " frames processados");
-      })
       .on("end", resolve)
       .on("error", reject)
       .outputOptions(["-vf", "fps=1/4"])
       .output(outputFramesPath)
       .run();
   });
+
+  console.log("Finalizado ffmpeg");
 }
 
 async function processFrames(outputFramesDir) {
@@ -65,11 +67,39 @@ async function cropFrame(directory, file) {
 
   await sharp(frameInputDir)
     .extract({ left: 0, top: 280, width: 550, height: 80 })
+    .withMetadata({ density: 300 })
     .toFile(frameOutputDir);
 }
 
 function deleteFile(directory, file) {
   fileSystem.unlinkSync(join(directory, file));
+}
+
+async function extractTextFromFrames(outputFramesDir) {
+  const files = fileSystem.readdirSync(outputFramesDir);
+  const frameFiles = files.filter(
+    (file) => file.startsWith("crop-frame") && file.endsWith(".png"),
+  );
+  const worker = await createWorker("por");
+
+  console.log(`Iniciado OCR dos frames ${outputFramesDir}`);
+
+  let ocrResults = "";
+
+  for (const frameFile of frameFiles) {
+    const ret = await worker.recognize(join(outputFramesDir, frameFile));
+
+    if (ret.data.text.trim()) {
+      ocrResults += `Text from ${frameFile}:\n${ret.data.text}\n\n`;
+    }
+  }
+
+  await worker.terminate();
+
+  const resultFilePath = join(outputFramesDir, "ocr_result.txt");
+  fileSystem.writeFileSync(resultFilePath, ocrResults);
+
+  console.log(`Finalizado OCR dos frames ${outputFramesDir} com sucesso`);
 }
 
 export default {
