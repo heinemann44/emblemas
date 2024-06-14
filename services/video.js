@@ -8,7 +8,7 @@ const sharp = require("sharp");
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 
-async function extractFrames(videoId) {
+async function processVideo(videoId) {
   const inputVideoPath = join(
     "resources",
     "videos",
@@ -20,14 +20,14 @@ async function extractFrames(videoId) {
 
   fileSystem.mkdirSync(outputDir, { recursive: true });
 
-  await generateFrames(inputVideoPath, outputFramesPath);
+  await extractFrames(inputVideoPath, outputFramesPath);
 
   await processFrames(outputDir);
 
   await extractTextFromFrames(outputDir);
 }
 
-async function generateFrames(inputVideoPath, outputFramesPath) {
+async function extractFrames(inputVideoPath, outputFramesPath) {
   await new Promise((resolve, reject) => {
     ffmpeg(inputVideoPath)
       .on("start", function (commandLine) {
@@ -90,7 +90,7 @@ async function extractTextFromFrames(outputFramesDir) {
     const ret = await worker.recognize(join(outputFramesDir, frameFile));
 
     if (ret.data.text.trim()) {
-      ocrResults += `Text from ${frameFile}:\n${ret.data.text}\n\n`;
+      ocrResults += `${ret.data.text}`;
     }
   }
 
@@ -103,5 +103,5 @@ async function extractTextFromFrames(outputFramesDir) {
 }
 
 export default {
-  extractFrames,
+  processVideo,
 };

@@ -13,7 +13,7 @@ async function downloadVideo(request, response) {
   try {
     const latestVideo = await youtube.getLatestVideo(channelId);
     await youtube.downloadVideo(latestVideo.videoId);
-    await video.extractFrames(latestVideo.videoId);
+    await video.processVideo(latestVideo.videoId);
 
     response.status(200).json("download complete");
   } catch (error) {
