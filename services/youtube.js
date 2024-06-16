@@ -2,7 +2,6 @@ import axios from "axios";
 import ytdl from "ytdl-core";
 import fileSystem from "fs";
 import { join } from "node:path";
-import utils from "/services/utils.js";
 
 const API_KEY = process.env.YOUTUBE_API_KEY;
 
@@ -63,8 +62,7 @@ async function downloadVideo(videoId) {
   try {
     const info = await ytdl.getInfo(videoId);
     const format = ytdl.chooseFormat(info.formats, { quality: "18" });
-    const today = utils.getTodayDir();
-    const outputDir = join("resources", "videos", today);
+    const outputDir = join("resources", "videos");
     const outputFilePath = join(outputDir, `${info.videoDetails.videoId}.mp4`);
 
     fileSystem.mkdirSync(outputDir, { recursive: true });
