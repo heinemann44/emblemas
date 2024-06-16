@@ -77,7 +77,6 @@ async function extractTextFromFrames(outputFramesDir) {
     (file) => file.startsWith("crop-frame") && file.endsWith(".png"),
   );
   const worker = await createWorker("por");
-  const MIN_TEXT_LENGTH = 25;
 
   console.log(`Iniciado OCR dos frames ${outputFramesDir}`);
 
@@ -96,9 +95,9 @@ async function extractTextFromFrames(outputFramesDir) {
     });
 
     if (filteredLines.length > 0) {
-      for (const textFiltered of filteredLines) {
-        console.log(`Arquivo ${frameFile} Texto: ${textFiltered}`);
-        ocrResults += `${textFiltered}\n`;
+      for (const filteredText of filteredLines) {
+        console.log(`Arquivo ${frameFile} Texto: ${filteredText}`);
+        ocrResults += `${filteredText}\n`;
       }
     }
   }
