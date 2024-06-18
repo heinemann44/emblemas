@@ -97,7 +97,7 @@ async function extractTextFromFrames(outputFramesDir) {
     if (filteredLines.length > 0) {
       for (const filteredText of filteredLines) {
         console.log(`Arquivo ${frameFile} Texto: ${filteredText}`);
-        ocrResults += `${filteredText}\n`;
+        ocrResults += `${normalizeOCRText(filteredText)}\n`;
       }
     }
   }
@@ -109,6 +109,10 @@ async function extractTextFromFrames(outputFramesDir) {
   fileSystem.writeFileSync(resultFilePath, ocrResults);
 
   console.log(`Finalizado OCR dos frames ${outputFramesDir} com sucesso`);
+}
+
+function normalizeOCRText(text) {
+  return text.replace(/(:\s*\w+).*/, "$1");
 }
 
 export default {
